@@ -127,7 +127,7 @@ const ContestList = () => {
         // Fetch contests from both APIs
         const [competeResponse, atcoderResponse] = await Promise.all([
           fetch("https://competeapi.vercel.app/contests/upcoming/"),
-          fetch("http://localhost:3001/api/atcoder/contests"),
+          fetch("https://atcoder-new-api.vercel.app/api/contests"),
         ]);
 
         if (!competeResponse.ok || !atcoderResponse.ok) {
@@ -136,7 +136,9 @@ const ContestList = () => {
 
         const competeData = await competeResponse.json();
         const atcoderData = await atcoderResponse.json();
-        const allContests = [...competeData, ...atcoderData].sort(
+        const filteredContests = competeData.filter(contest => contest.site.toLowerCase() !== 'leetcode');
+
+        const allContests = [...filteredContests, ...atcoderData].sort(
           (a, b) => a.startTime - b.startTime
         );
 
