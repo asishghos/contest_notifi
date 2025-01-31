@@ -195,7 +195,7 @@ const ContestList = () => {
           <button
             onClick={() => setSelectedPlatform("all")}
             className={`
-          px-4 py-2 rounded-lg transition-all duration-300 ease-in-out
+          px-2 py-1 text-sm rounded-lg transition-all duration-300 ease-in-out
           ${selectedPlatform === "all"
                 ? "bg-blue-600 text-white shadow-md"
                 : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
@@ -208,7 +208,7 @@ const ContestList = () => {
           <button
             onClick={() => setSelectedPlatform("atcoder")}
             className={`
-          px-4 py-2 rounded-lg transition-all duration-300 ease-in-out
+          px-2 py-1 text-sm rounded-lg transition-all duration-300 ease-in-out
           ${selectedPlatform === "atcoder"
                 ? "bg-pink-600 text-white shadow-md"
                 : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
@@ -221,7 +221,7 @@ const ContestList = () => {
           <button
             onClick={() => setSelectedPlatform("codechef")}
             className={`
-          px-4 py-2 rounded-lg transition-all duration-300 ease-in-out
+          px-2 py-1 text-sm rounded-lg transition-all duration-300 ease-in-out
           ${selectedPlatform === "codechef"
                 ? "bg-green-600 text-white shadow-md"
                 : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
@@ -234,7 +234,7 @@ const ContestList = () => {
           <button
             onClick={() => setSelectedPlatform("codeforces")}
             className={`
-          px-4 py-2 rounded-lg transition-all duration-300 ease-in-out
+          px-2 py-1 text-sm rounded-lg transition-all duration-300 ease-in-out
           ${selectedPlatform === "codeforces"
                 ? "bg-blue-800 text-white shadow-md"
                 : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
@@ -257,6 +257,11 @@ const ContestList = () => {
           ))}
         </div>
       )}
+      <div className="text-center mt-12">
+        <span className="text-base font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
+          © Team RECursion
+        </span>
+      </div>
     </div>
   );
 };
