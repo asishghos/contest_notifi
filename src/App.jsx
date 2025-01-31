@@ -240,10 +240,10 @@ const ContestList = () => {
   );
 
   const platforms = [
-    { id: "all", label: "All Platforms", color: "blue-500" },
-    { id: "atcoder", label: "AtCoder", color: "purple-500" },
-    { id: "codechef", label: "CodeChef", color: "green-500" },
-    { id: "codeforces", label: "CodeForces", color: "blue-500" }
+    { id: "all", label: "All Platforms", color: "white" },
+    { id: "atcoder", label: "AtCoder", color: "white" },
+    { id: "codechef", label: "CodeChef", color: "white" },
+    { id: "codeforces", label: "CodeForces", color: "white" }
   ];
 
   if (loading) {
@@ -280,7 +280,7 @@ const ContestList = () => {
                   transition-all duration-300 ease-in-out
                   ${selectedPlatform === platform.id
                     ? `text-${platform.color} bg-gray-700 shadow-md transform scale-105`
-                    : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
                   }
                 `}
               >
