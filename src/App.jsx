@@ -83,47 +83,66 @@ const ContestCard = ({ contest }) => {
   };
 
   return (
-    <div
-      className={`shadow-md rounded-lg p-4 mb-4 border-l-4 transition-all duration-300 ${colors.bg} ${colors.hover}`}
-      style={{ borderLeftColor: colors.border }}
-    >
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-xl font-bold text-gray-800">
-          {contest.site.toUpperCase()} Contest
-        </h2>
-        <div className="flex items-center text-gray-600">
-          <Clock size={16} className="mr-2" />
-          <span className="text-sm">{startDateTime.fullDate}</span>
+    <div className="relative w-full bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300">
+      {/* Left border indicator */}
+      <div
+        className="absolute left-0 top-0 w-2 h-full rounded-l-lg transition-colors duration-300"
+        style={{ backgroundColor: colors.border }}
+      />
+
+      {/* Header */}
+      <div className="p-6 pb-3">
+        <div className="flex justify-between items-center gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-xl font-bold text-gray-900">
+              {contest.site.toUpperCase()} Contest
+            </h2>
+            <div className="flex items-center text-gray-500 text-sm">
+              <Clock size={14} className="mr-1.5" />
+              <span>{startDateTime.fullDate}</span>
+            </div>
+          </div>
+          <div className="px-2.5 py-1 border border-gray-200 rounded-full text-sm text-gray-600">
+            {formatDuration(contest.duration)}
+          </div>
         </div>
       </div>
-      <p className="text-gray-700 mb-4 whitespace-pre-line">
-        {generateContestMessage()}
-      </p>
-      <div className="flex justify-between items-center">
-        <span className="text-sm text-gray-500">
-          Duration: {formatDuration(contest.duration)}
-        </span>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleCopy}
-            className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            {copied ? (
-              <Check size={16} className="text-green-500" />
-            ) : (
-              <Copy size={16} />
-            )}
-            <span className="ml-2">{copied ? "Copied!" : "Copy"}</span>
-          </button>
-          <a
-            href={contest.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-          >
-            Contest Link <ExternalLink size={16} className="ml-2" />
-          </a>
-        </div>
+
+      {/* Content */}
+      <div className="px-6 py-4">
+        <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+          {generateContestMessage()}
+        </p>
+      </div>
+
+      {/* Footer */}
+      <div className="px-6 pt-2 pb-6 flex justify-end gap-2">
+        <button
+          onClick={handleCopy}
+          className="inline-flex items-center px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors duration-200"
+        >
+          {copied ? (
+            <>
+              <Check size={14} className="mr-1.5 text-green-500" />
+              Copied
+            </>
+          ) : (
+            <>
+              <Copy size={14} className="mr-1.5" />
+              Copy
+            </>
+          )}
+        </button>
+
+        <a
+          href={contest.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center px-3 py-1.5 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
+        >
+          Contest Link
+          <ExternalLink size={14} className="ml-1.5" />
+        </a>
       </div>
     </div>
   );
@@ -234,84 +253,78 @@ const ContestList = () => {
         Error loading contests: {error}
       </div>
     );
-
+  const platforms = [
+    { id: "all", label: "All Platforms", color: "blue-600" },
+    { id: "atcoder", label: "AtCoder", color: "pink-600" },
+    { id: "codechef", label: "CodeChef", color: "green-600" },
+    { id: "codeforces", label: "CodeForces", color: "blue-800" }
+  ];
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
+    <div className="container mx-auto px-4 py-12 max-w-7xl">
+      <h1 className="text-4xl font-bold text-center mb-12 text-gray-800">
         Upcoming Coding Contests
       </h1>
-      <div className="flex justify-center mb-8">
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setSelectedPlatform("all")}
-            className={`
-          px-2 py-1 text-sm rounded-lg transition-all duration-300 ease-in-out
-          ${selectedPlatform === "all"
-                ? "bg-blue-600 text-white shadow-md"
-                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
-              }
-        `}
-          >
-            All Platforms
-          </button>
 
-          <button
-            onClick={() => setSelectedPlatform("atcoder")}
-            className={`
-          px-2 py-1 text-sm rounded-lg transition-all duration-300 ease-in-out
-          ${selectedPlatform === "atcoder"
-                ? "bg-pink-600 text-white shadow-md"
-                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
-              }
-        `}
-          >
-            AtCoder
-          </button>
-
-          <button
-            onClick={() => setSelectedPlatform("codechef")}
-            className={`
-          px-2 py-1 text-sm rounded-lg transition-all duration-300 ease-in-out
-          ${selectedPlatform === "codechef"
-                ? "bg-green-600 text-white shadow-md"
-                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
-              }
-        `}
-          >
-            CodeChef
-          </button>
-
-          <button
-            onClick={() => setSelectedPlatform("codeforces")}
-            className={`
-          px-2 py-1 text-sm rounded-lg transition-all duration-300 ease-in-out
-          ${selectedPlatform === "codeforces"
-                ? "bg-blue-800 text-white shadow-md"
-                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
-              }
-        `}
-          >
-            CodeForces
-          </button>
+      <div className="flex justify-center mb-10">
+        <div className="inline-flex items-center gap-3 p-1.5 bg-gray-100 rounded-xl">
+          {platforms.map(platform => (
+            <button
+              key={platform.id}
+              onClick={() => setSelectedPlatform(platform.id)}
+              className={`
+                px-4 py-2 text-sm font-medium rounded-lg
+                transition-all duration-300 ease-in-out
+                ${selectedPlatform === platform.id
+                  ? `bg-${platform.color} text-white shadow-md transform scale-105`
+                  : "bg-transparent text-gray-700 hover:bg-white hover:shadow-sm"
+                }
+              `}
+            >
+              {platform.label}
+            </button>
+          ))}
         </div>
       </div>
 
       {filteredContests.length === 0 ? (
-        <p className="text-center text-gray-600">
-          No upcoming contests found for the selected platform.
-        </p>
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="text-gray-400 mb-4">
+            <svg
+              className="w-16 h-16"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 14h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <p className="text-lg text-gray-600">
+            No upcoming contests found for the selected platform.
+          </p>
+        </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredContests.map((contest, index) => (
             <ContestCard key={index} contest={contest} />
           ))}
         </div>
       )}
-      <div className="text-center mt-12">
-        <span className="text-base font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
-          © Team RECursion
-        </span>
-      </div>
+
+      <footer className="mt-16 pb-8">
+        <div className="flex flex-col items-center justify-center gap-2">
+          <span className="text-base font-bold bg-gradient-to-r from-blue-600 via-purple-500 to-purple-600 text-transparent bg-clip-text">
+            © Team RECursion
+          </span>
+          <p className="text-sm text-gray-500">
+            Stay updated with the latest coding competitions
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };
