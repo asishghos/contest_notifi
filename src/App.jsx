@@ -1,39 +1,60 @@
 import React, { useState, useEffect } from "react";
 import { Clock, ExternalLink, Copy, Check } from "lucide-react";
 
-const formatDateTime = (timestamp) => {
-  const date = new Date(parseInt(timestamp));
-  return {
-    fullDate: date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }),
-    time: date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    }),
-    timeZone: "IST",
-  };
-};
+const formatDuration = (durationSeconds) => {
+  const hours = Math.floor(durationSeconds / 3600);
+  const minutes = Math.floor((durationSeconds % 3600) / 60);
 
-const formatDuration = (durationMs) => {
-  const minutes = Math.floor(durationMs / 60000);
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-
-  if (hours > 0) {
-    return `${hours} hour${hours > 1 ? "s" : ""} ${remainingMinutes > 0 ? `${remainingMinutes} minutes` : ""
-      }`.trim();
+  if (hours > 0 && minutes > 0) {
+    return `${hours} hour${hours > 1 ? 's' : ''} ${minutes} minute${minutes > 1 ? 's' : ''}`;
+  } else if (hours > 0) {
+    return `${hours} hour${hours > 1 ? 's' : ''}`;
+  } else if (minutes > 0) {
+    return `${minutes} minute${minutes > 1 ? 's' : ''}`;
   }
-  return `${minutes} minutes`;
+  return '0 minutes';
+};
+const formatDateTime = (timestamp) => {
+  // Create date object in UTC from the timestamp
+  const utcDate = new Date(timestamp);
+  const indianTime = new Intl.DateTimeFormat('en-IN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'Asia/Kolkata'
+  }).format(utcDate);
+
+  return {
+    fullDate: indianTime,
+    timeZone: "IST"
+  };
 };
 
 const ContestCard = ({ contest }) => {
   const [copied, setCopied] = useState(false);
   const startDateTime = formatDateTime(contest.startTime);
-
+  const cardColors = {
+    codechef: {
+      border: "#4CAF50",
+      bg: "bg-green-50",
+      hover: "hover:bg-green-100"
+    },
+    codeforces: {
+      border: "#1565C0",
+      bg: "bg-blue-50",
+      hover: "hover:bg-blue-100"
+    },
+    atcoder: {
+      border: "#9C27B0",
+      bg: "bg-purple-50",
+      hover: "hover:bg-purple-100"
+    }
+  };
+  const platform = contest.site.toLowerCase();
+  const colors = cardColors[platform];
   const generateContestMessage = () => {
     const formattedDate = `${startDateTime.fullDate} at ${startDateTime.time} ${startDateTime.timeZone}`;
     const formattedDuration = formatDuration(contest.duration);
@@ -63,15 +84,8 @@ const ContestCard = ({ contest }) => {
 
   return (
     <div
-      className="bg-white shadow-md rounded-lg p-4 mb-4 border-l-4 hover:shadow-lg transition-shadow duration-300"
-      style={{
-        borderLeftColor:
-          contest.site === "codechef"
-            ? "#4CAF50"
-            : contest.site === "codeforces"
-              ? "#1565C0"
-              : "#9C27B0",
-      }}
+      className={`shadow-md rounded-lg p-4 mb-4 border-l-4 transition-all duration-300 ${colors.bg} ${colors.hover}`}
+      style={{ borderLeftColor: colors.border }}
     >
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-xl font-bold text-gray-800">
@@ -120,39 +134,75 @@ const ContestList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPlatform, setSelectedPlatform] = useState("all");
+  const CACHE_KEY = 'contestData';
+  const CACHE_DURATION = 1800000; // 30 minutes
 
   useEffect(() => {
     const fetchAllContests = async () => {
       try {
-        // Fetch contests from both APIs
-        const [competeResponse, atcoderResponse] = await Promise.all([
-          fetch("https://competeapi.vercel.app/contests/upcoming/"),
-          fetch("https://atcoder-theta.vercel.app/api/contests"),
-        ]);
+        // Check cache first
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        if (cachedData) {
+          const { data, timestamp } = JSON.parse(cachedData);
+          if (Date.now() - timestamp < CACHE_DURATION) {
+            const filteredCachedData = data.map(contest => {
+              if (contest.site === 'AtCoder') {
+                return contest.title.toLowerCase().includes('beginner contest') ? contest : null;
+              }
+              return contest;
+            }).filter(Boolean);
 
-        if (!competeResponse.ok || !atcoderResponse.ok) {
-          throw new Error("One or more API requests failed");
+            setContests(filteredCachedData);
+            setLoading(false);
+            return;
+          }
         }
 
-        const competeData = await competeResponse.json();
-        const atcoderData = await atcoderResponse.json();
+        const currentDate = new Date().toISOString().slice(0, 19).replace(/:/g, '%3A');
+        const platforms = [
+          { id: 93, name: 'AtCoder' },
+          { id: 1, name: 'Codeforces' },
+          { id: 2, name: 'CodeChef' }
+        ];
 
-        // Filter for only AtCoder Beginner Contests
-        const atcoderBeginnerContests = atcoderData.filter(contest =>
-          contest.title.toLowerCase().includes('beginner contest')
-        ).map(contest => ({
-          ...contest,
-          // Convert to the specified time format and parse to timestamp
-          startTime: new Date(contest.startTime).getTime()
+        const responses = await Promise.all(
+          platforms.map(platform =>
+            fetch(`https://clist.by/api/v1/contest/?api_key=311318ccc97f6fd1d41d57634c270146aeada4a2&resource__id=${platform.id}&end__gt=${currentDate}&username=asishgh`)
+          )
+        );
+
+        const dataPromises = responses.map(async (response, index) => {
+          const data = await response.json();
+          return data.objects.map(contest => {
+            // Convert UTC string to timestamp, considering it's in UTC
+            const utcStartTime = new Date(contest.start + 'Z').getTime(); // Adding 'Z' to ensure UTC parsing
+
+            return {
+              ...contest,
+              site: platforms[index].name,
+              title: contest.event,
+              url: contest.href,
+              startTime: utcStartTime,
+              duration: contest.duration
+            };
+          });
+        });
+
+        let allContests = (await Promise.all(dataPromises))
+          .flat()
+          .filter(contest => {
+            if (contest.site === 'AtCoder') {
+              return contest.title.toLowerCase().includes('beginner contest');
+            }
+            return true;
+          })
+          .sort((a, b) => a.startTime - b.startTime);
+
+        // Cache the results
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          data: allContests,
+          timestamp: Date.now()
         }));
-
-        const filteredCompeteContests = competeData.filter(
-          contest => contest.site.toLowerCase() !== 'leetcode'
-        );
-
-        const allContests = [...filteredCompeteContests, ...atcoderBeginnerContests].sort(
-          (a, b) => a.startTime - b.startTime
-        );
 
         setContests(allContests);
         setLoading(false);
