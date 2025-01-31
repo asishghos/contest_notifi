@@ -127,7 +127,7 @@ const ContestList = () => {
         // Fetch contests from both APIs
         const [competeResponse, atcoderResponse] = await Promise.all([
           fetch("https://competeapi.vercel.app/contests/upcoming/"),
-          fetch("https://atcoder-new-api.vercel.app/api/contests"),
+          fetch("https://atcoder-theta.vercel.app/api/contests"),
         ]);
 
         if (!competeResponse.ok || !atcoderResponse.ok) {
@@ -136,9 +136,21 @@ const ContestList = () => {
 
         const competeData = await competeResponse.json();
         const atcoderData = await atcoderResponse.json();
-        const filteredContests = competeData.filter(contest => contest.site.toLowerCase() !== 'leetcode');
 
-        const allContests = [...filteredContests, ...atcoderData].sort(
+        // Filter for only AtCoder Beginner Contests
+        const atcoderBeginnerContests = atcoderData.filter(contest =>
+          contest.title.toLowerCase().includes('beginner contest')
+        ).map(contest => ({
+          ...contest,
+          // Convert to the specified time format and parse to timestamp
+          startTime: new Date(contest.startTime).getTime()
+        }));
+
+        const filteredCompeteContests = competeData.filter(
+          contest => contest.site.toLowerCase() !== 'leetcode'
+        );
+
+        const allContests = [...filteredCompeteContests, ...atcoderBeginnerContests].sort(
           (a, b) => a.startTime - b.startTime
         );
 
@@ -179,45 +191,61 @@ const ContestList = () => {
         Upcoming Coding Contests
       </h1>
       <div className="flex justify-center mb-8">
-        <div className="inline-flex rounded-md shadow-sm" role="group">
+        <div className="flex space-x-2">
           <button
             onClick={() => setSelectedPlatform("all")}
-            className={`px-4 py-2 text-sm font-medium rounded-l-lg border ${selectedPlatform === "all"
-              ? "bg-blue-600 text-white border-blue-600"
-              : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-              }`}
+            className={`
+          px-4 py-2 rounded-lg transition-all duration-300 ease-in-out
+          ${selectedPlatform === "all"
+                ? "bg-blue-600 text-white shadow-md"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+              }
+        `}
           >
             All Platforms
           </button>
+
           <button
             onClick={() => setSelectedPlatform("atcoder")}
-            className={`px-4 py-2 text-sm font-medium rounded-r-lg border ${selectedPlatform === "atcoder"
-              ? "bg-pink-600 text-white border-pink-600"
-              : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-              }`}
+            className={`
+          px-4 py-2 rounded-lg transition-all duration-300 ease-in-out
+          ${selectedPlatform === "atcoder"
+                ? "bg-pink-600 text-white shadow-md"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+              }
+        `}
           >
             AtCoder
           </button>
+
           <button
             onClick={() => setSelectedPlatform("codechef")}
-            className={`px-4 py-2 text-sm font-medium border-t border-b ${selectedPlatform === "codechef"
-              ? "bg-green-600 text-white border-green-600"
-              : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-              }`}
+            className={`
+          px-4 py-2 rounded-lg transition-all duration-300 ease-in-out
+          ${selectedPlatform === "codechef"
+                ? "bg-green-600 text-white shadow-md"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+              }
+        `}
           >
             CodeChef
           </button>
+
           <button
             onClick={() => setSelectedPlatform("codeforces")}
-            className={`px-4 py-2 text-sm font-medium rounded-r-lg border ${selectedPlatform === "codeforces"
-              ? "bg-blue-800 text-white border-blue-800"
-              : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-              }`}
+            className={`
+          px-4 py-2 rounded-lg transition-all duration-300 ease-in-out
+          ${selectedPlatform === "codeforces"
+                ? "bg-blue-800 text-white shadow-md"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+              }
+        `}
           >
             CodeForces
           </button>
         </div>
       </div>
+
       {filteredContests.length === 0 ? (
         <p className="text-center text-gray-600">
           No upcoming contests found for the selected platform.
