@@ -64,9 +64,22 @@ const ContestCard = ({ contest }) => {
   const colors = platformConfig[platform];
 
   const generateContestMessage = () => {
+    const formattedDate = `${startDateTime.fullDate} at ${startDateTime.time} ${startDateTime.timeZone}`;
     const formattedDuration = formatDuration(contest.duration);
-    const message = `${contest.title} will start on ${startDateTime.fullDate}.\nContest duration is ${formattedDuration}.\n\nContest link: ${contest.url}\n\nHappy Coding! 😀`;
-    return message;
+    switch (contest.site.toLowerCase()) {
+      case "codechef":
+        return `Codechef ${contest.title} will start on ${formattedDate}.\nContest duration is ${formattedDuration}.\n\nContest link: ${contest.url}\n\nHappy Coding! 😀`;
+      case "codeforces":
+        return `${contest.title} will start on ${formattedDate}.\nContest duration is ${formattedDuration}.\n\nContest link: ${contest.url}\n\nHappy Coding! 😀`;
+      case "atcoder":
+        return `${contest.title} will start on ${startDateTime.fullDate
+          } at ${startDateTime.time} ${startDateTime.timeZone
+          }.\nContest duration is ${formatDuration(
+            contest.duration
+          )}.\n\nContest link: ${contest.url}\n\nHappy Coding! 😀`;
+      default:
+        return contest.title;
+    }
   };
 
   const handleCopy = async () => {
