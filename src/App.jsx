@@ -1,38 +1,216 @@
 import React, { useState, useEffect } from "react";
 import { Clock, ExternalLink, Copy, Check } from "lucide-react";
 
-const formatDuration = (durationSeconds) => {
-  const hours = Math.floor(durationSeconds / 3600);
-  const minutes = Math.floor((durationSeconds % 3600) / 60);
+// Utility functions component
+const MessageUtils = {
+  formatDateTime: (timestamp) => {
+    const utcDate = new Date(timestamp);
+    const options = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Kolkata'
+    };
 
-  if (hours > 0 && minutes > 0) {
-    return `${hours} hour${hours > 1 ? 's' : ''} ${minutes} minute${minutes > 1 ? 's' : ''}`;
-  } else if (hours > 0) {
-    return `${hours} hour${hours > 1 ? 's' : ''}`;
-  } else if (minutes > 0) {
-    return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+    const indianTime = new Intl.DateTimeFormat('en-IN', options).format(utcDate);
+    const day = utcDate.toLocaleDateString('en-US', { weekday: 'long' });
+
+    return {
+      fullDate: indianTime,
+      timeZone: "IST",
+      dayName: day,
+      date: utcDate.getDate(),
+      month: utcDate.toLocaleDateString('en-US', { month: 'long' }),
+      time: indianTime.split('at')[1].trim()
+    };
+  },
+
+  formatDuration: (durationSeconds) => {
+    const hours = Math.floor(durationSeconds / 3600);
+    const minutes = Math.floor((durationSeconds % 3600) / 60);
+
+    if (hours > 0 && minutes > 0) {
+      return `${hours} hour${hours > 1 ? 's' : ''} ${minutes} minute${minutes > 1 ? 's' : ''}`;
+    } else if (hours > 0) {
+      return `${hours} hour${hours > 1 ? 's' : ''}`;
+    } else if (minutes > 0) {
+      return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+    }
+    return '0 minutes';
+  },
+
+  // Convert regular text to fancy Unicode characters
+  toFancyText: (text) => {
+    const fancyChars = {
+      'A': '𝐀', 'B': '𝐁', 'C': '𝐂', 'D': '𝐃', 'E': '𝐄', 'F': '𝐅', 'G': '𝐆', 'H': '𝐇', 'I': '𝐈',
+      'J': '𝐉', 'K': '𝐊', 'L': '𝐋', 'M': '𝐌', 'N': '𝐍', 'O': '𝐎', 'P': '𝐏', 'Q': '𝐐', 'R': '𝐑',
+      'S': '𝐒', 'T': '𝐓', 'U': '𝐔', 'V': '𝐕', 'W': '𝐖', 'X': '𝐗', 'Y': '𝐘', 'Z': '𝐙',
+      'a': '𝐚', 'b': '𝐛', 'c': '𝐜', 'd': '𝐝', 'e': '𝐞', 'f': '𝐟', 'g': '𝐠', 'h': '𝐡', 'i': '𝐢',
+      'j': '𝐣', 'k': '𝐤', 'l': '𝐥', 'm': '𝐦', 'n': '𝐧', 'o': '𝐨', 'p': '𝐩', 'q': '𝐪', 'r': '𝐫',
+      's': '𝐬', 't': '𝐭', 'u': '𝐮', 'v': '𝐯', 'w': '𝐰', 'x': '𝐱', 'y': '𝐲', 'z': '𝐳',
+      '0': '𝟎', '1': '𝟏', '2': '𝟐', '3': '𝟑', '4': '𝟒', '5': '𝟓', '6': '𝟔', '7': '𝟕', '8': '𝟖', '9': '𝟗'
+    };
+    return text.split('').map(char => fancyChars[char] || char).join('');
   }
-  return '0 minutes';
 };
 
-const formatDateTime = (timestamp) => {
-  const utcDate = new Date(timestamp);
-  const indianTime = new Intl.DateTimeFormat('en-IN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-    timeZone: 'Asia/Kolkata'
-  }).format(utcDate);
+// CopyButton Component
+const CopyButton = ({ onClick, copied, type, color }) => (
+  <button
+    onClick={onClick}
+    className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm
+      ${color.accentLight} ${color.button} transition-colors duration-200`}
+  >
+    {copied ? (
+      <>
+        <Check size={14} className="mr-1.5" />
+        Copied {type}
+      </>
+    ) : (
+      <>
+        <Copy size={14} className="mr-1.5" />
+        Copy {type}
+      </>
+    )}
+  </button>
+);
+// Helper function for ordinal suffixes
+const getOrdinalSuffix = (day) => {
+  const suffixes = ['th', 'st', 'nd', 'rd'];
+  const v = day % 100;
+  return day + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]);
+};
+// Message Generator Component
+const MessageGenerator = {
+  generateWhatsAppMessage: (contest, startDateTime) => {
+    const formattedDuration = MessageUtils.formatDuration(contest.duration);
+    const date = `${getOrdinalSuffix(startDateTime.date)} ${startDateTime.month}, ${new Date(contest.startTime).getFullYear()}`;
+    const time = startDateTime.time;
 
-  return {
-    fullDate: indianTime,
-    timeZone: "IST"
+    switch (contest.site.toLowerCase()) {
+      case "codechef":
+        return `Codechef ${contest.title} will start on ${date} at ${time} IST.\nContest duration is ${formattedDuration}.\n\nContest link: ${contest.url}\nHappy Coding! 😀`;
+      case "codeforces":
+        return `${contest.title} will start on ${date} at ${time} IST.\nContest duration is ${formattedDuration}.\n\nContest link: ${contest.url}\nHappy Coding! 😀`;
+      case "atcoder":
+        return `${contest.title} will start on ${date} at ${time} IST.\nContest duration is ${formattedDuration}.\n\nContest link: ${contest.url}\nHappy Coding! 😀`;
+      default:
+        return contest.title;
+    }
+  },
+
+  generateFacebookMessage: (contest, dateInfo) => {
+    const fancyTitle = MessageUtils.toFancyText(contest.title);
+    const fancyDate = MessageUtils.toFancyText(`${getOrdinalSuffix(dateInfo.date)} ${dateInfo.month}, ${dateInfo.dayName}, ${new Date(contest.startTime).getFullYear()}`);
+    const fancyTime = MessageUtils.toFancyText(dateInfo.time.replace(' IST', ''));
+    const duration = MessageUtils.toFancyText(MessageUtils.formatDuration(contest.duration));
+    switch (contest.site.toLowerCase()) {
+      case "codechef":
+        return `Upcoming Contest: ${MessageUtils.toFancyText('Codechef ' + contest.title)}\nDate: ${fancyDate}\nContest Timing: ${fancyTime} 𝐈𝐒𝐓\nDuration: ${duration}\nContest link: ${contest.url}\n\nHappy Coding! 😀`;
+      case "codeforces":
+        return `Upcoming Contest: ${fancyTitle}\nDate: ${fancyDate}\nContest Timing: ${fancyTime} 𝐈𝐒𝐓\nDuration: ${duration}\nContest link: ${contest.url}\n\nHappy Coding! 😀`;
+      case "atcoder":
+        return `Upcoming Contest: ${fancyTitle}\nDate: ${fancyDate}\nContest Timing: ${fancyTime} 𝐈𝐒𝐓\nDuration: ${duration}\nContest link: ${contest.url}\n\nHappy Coding! 😀`;
+      default:
+        return contest.title;
+    }
+  }
+};
+
+// Contest Card Component
+const ContestCard = ({ contest }) => {
+  const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
+  const [copiedFacebook, setCopiedFacebook] = useState(false);
+  const startDateTime = MessageUtils.formatDateTime(contest.startTime);
+  const platform = contest.site.toLowerCase();
+  const colors = platformConfig[platform];
+
+  const handleCopy = async (type) => {
+    const message = type === 'WhatsApp'
+      ? MessageGenerator.generateWhatsAppMessage(contest, startDateTime)
+      : MessageGenerator.generateFacebookMessage(contest, startDateTime);
+
+    await navigator.clipboard.writeText(message);
+    if (type === 'WhatsApp') {
+      setCopiedWhatsApp(true);
+      setTimeout(() => setCopiedWhatsApp(false), 2000);
+    } else {
+      setCopiedFacebook(true);
+      setTimeout(() => setCopiedFacebook(false), 2000);
+    }
   };
+
+  return (
+    <div className={`relative rounded-xl bg-gradient-to-br ${colors.gradient} 
+      border border-gray-800 backdrop-blur-sm transition-all duration-300 
+      hover:shadow-lg hover:shadow-black/5 hover:border-gray-700`}>
+      <div className="p-6">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h3 className={`text-xl font-semibold ${colors.accentLight}`}>
+              {contest.site.toUpperCase()}
+            </h3>
+            <div className="flex items-center mt-2 text-gray-400">
+              <Clock size={14} className="mr-1.5" />
+              <span className="text-sm">{startDateTime.fullDate}</span>
+            </div>
+          </div>
+          <span className="px-3 py-1 text-sm bg-black/20 rounded-full text-gray-300">
+            {MessageUtils.formatDuration(contest.duration)}
+          </span>
+        </div>
+
+        <div className="mt-4 space-y-4">
+          <div className="bg-black/20 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-gray-400 mb-2">WhatsApp Format</h4>
+            <p className="text-white text-sm whitespace-pre-line">
+              {MessageGenerator.generateWhatsAppMessage(contest, startDateTime)}
+            </p>
+          </div>
+
+          <div className="bg-black/20 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-gray-400 mb-2">Facebook Format</h4>
+            <p className="text-white text-sm whitespace-pre-line">
+              {MessageGenerator.generateFacebookMessage(contest, startDateTime)}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 mt-4">
+          <CopyButton
+            onClick={() => handleCopy('WhatsApp')}
+            copied={copiedWhatsApp}
+            type="WhatsApp"
+            color={colors}
+          />
+
+          <CopyButton
+            onClick={() => handleCopy('Facebook')}
+            copied={copiedFacebook}
+            type="Facebook"
+            color={colors}
+          />
+
+          <a
+            href={contest.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm
+              ${colors.accentLight} ${colors.button} transition-colors duration-200`}
+          >
+            Contest Link
+            <ExternalLink size={14} className="ml-1.5" />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
 };
 
+// Platform configuration object (unchanged)
 const platformConfig = {
   codechef: {
     gradient: "from-green-500/10 to-green-500/5",
@@ -55,100 +233,6 @@ const platformConfig = {
     accentHover: "hover:text-purple-300",
     button: "hover:bg-purple-500/10",
   }
-};
-
-const ContestCard = ({ contest }) => {
-  const [copied, setCopied] = useState(false);
-  const startDateTime = formatDateTime(contest.startTime);
-  const platform = contest.site.toLowerCase();
-  const colors = platformConfig[platform];
-
-  const generateContestMessage = () => {
-    const formattedDate = `${startDateTime.fullDate} at ${startDateTime.time} ${startDateTime.timeZone}`;
-    const formattedDuration = formatDuration(contest.duration);
-    switch (contest.site.toLowerCase()) {
-      case "codechef":
-        return `Codechef ${contest.title} will start on ${formattedDate}.\nContest duration is ${formattedDuration}.\n\nContest link: ${contest.url}\n\nHappy Coding! 😀`;
-      case "codeforces":
-        return `${contest.title} will start on ${formattedDate}.\nContest duration is ${formattedDuration}.\n\nContest link: ${contest.url}\n\nHappy Coding! 😀`;
-      case "atcoder":
-        return `${contest.title} will start on ${startDateTime.fullDate
-          } at ${startDateTime.time} ${startDateTime.timeZone
-          }.\nContest duration is ${formatDuration(
-            contest.duration
-          )}.\n\nContest link: ${contest.url}\n\nHappy Coding! 😀`;
-      default:
-        return contest.title;
-    }
-  };
-
-  const handleCopy = async () => {
-    const message = generateContestMessage();
-    await navigator.clipboard.writeText(message);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <div className={`relative rounded-xl bg-gradient-to-br ${colors.gradient} 
-      border border-gray-800 backdrop-blur-sm transition-all duration-300 
-      hover:shadow-lg hover:shadow-black/5 hover:border-gray-700`}>
-      <div className="p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h3 className={`text-xl font-semibold ${colors.accentLight}`}>
-              {contest.site.toUpperCase()}
-            </h3>
-            <div className="flex items-center mt-2 text-gray-400">
-              <Clock size={14} className="mr-1.5" />
-              <span className="text-sm">{startDateTime.fullDate}</span>
-            </div>
-          </div>
-          <span className="px-3 py-1 text-sm bg-black/20 rounded-full text-gray-300">
-            {formatDuration(contest.duration)}
-          </span>
-        </div>
-
-        {/* Content */}
-        <div className="px-6 py-4">
-          <p className="text-white whitespace-pre-line leading-relaxed">
-            {generateContestMessage()}
-          </p>
-        </div>
-
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={handleCopy}
-            className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm
-              ${colors.accentLight} ${colors.button} transition-colors duration-200`}
-          >
-            {copied ? (
-              <>
-                <Check size={14} className="mr-1.5" />
-                Copied
-              </>
-            ) : (
-              <>
-                <Copy size={14} className="mr-1.5" />
-                Copy
-              </>
-            )}
-          </button>
-
-          <a
-            href={contest.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm
-              ${colors.accentLight} ${colors.button} transition-colors duration-200`}
-          >
-            Contest Link
-            <ExternalLink size={14} className="ml-1.5" />
-          </a>
-        </div>
-      </div>
-    </div>
-  );
 };
 
 const ContestList = () => {
