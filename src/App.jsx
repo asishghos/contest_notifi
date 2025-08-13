@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Clock, ExternalLink, Copy, Check } from "lucide-react";
 
-// Utility functions component
 const MessageUtils = {
   formatDateTime: (timestamp) => {
     const utcDate = new Date(timestamp);
@@ -42,7 +41,6 @@ const MessageUtils = {
     return '0 minutes';
   },
 
-  // Convert regular text to fancy Unicode characters
   toFancyText: (text) => {
     const fancyChars = {
       'A': '𝐀', 'B': '𝐁', 'C': '𝐂', 'D': '𝐃', 'E': '𝐄', 'F': '𝐅', 'G': '𝐆', 'H': '𝐇', 'I': '𝐈',
@@ -57,7 +55,6 @@ const MessageUtils = {
   }
 };
 
-// CopyButton Component
 const CopyButton = ({ onClick, copied, type, color }) => (
   <button
     onClick={onClick}
@@ -77,13 +74,11 @@ const CopyButton = ({ onClick, copied, type, color }) => (
     )}
   </button>
 );
-// Helper function for ordinal suffixes
 const getOrdinalSuffix = (day) => {
   const suffixes = ['th', 'st', 'nd', 'rd'];
   const v = day % 100;
   return day + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]);
 };
-// Message Generator Component
 const MessageGenerator = {
   generateWhatsAppMessage: (contest, startDateTime) => {
     const formattedDuration = MessageUtils.formatDuration(contest.duration);
@@ -119,8 +114,6 @@ const MessageGenerator = {
     }
   }
 };
-
-// Contest Card Component
 const ContestCard = ({ contest }) => {
   const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
   const [copiedFacebook, setCopiedFacebook] = useState(false);
@@ -209,8 +202,6 @@ const ContestCard = ({ contest }) => {
     </div>
   );
 };
-
-// Platform configuration object (unchanged)
 const platformConfig = {
   codechef: {
     gradient: "from-green-500/10 to-green-500/5",
@@ -406,7 +397,7 @@ const ContestList = () => {
         <footer className="mt-16 pb-8">
           <div className="flex flex-col items-center justify-center gap-2">
             <span className="text-base font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">
-              © Team RECursion
+              © Team RECursion 2026
             </span>
             <p className="text-sm text-gray-500">
               Stay updated with the latest coding competitions
