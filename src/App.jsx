@@ -263,7 +263,7 @@ const ContestList = () => {
 
         const responses = await Promise.all(
           platforms.map(platform =>
-            fetch(`https://clist.by/api/v1/contest/?api_key=311318ccc97f6fd1d41d57634c270146aeada4a2&resource__id=${platform.id}&end__gt=${currentDate}&username=asishgh`)
+            fetch(`https://clist.by/api/v1/contest/?api_key=${process.env.api_key}&resource__id=${platform.id}&end__gt=${currentDate}&username=asishgh`)
           )
         );
 
